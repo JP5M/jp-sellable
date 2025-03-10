@@ -14,7 +14,7 @@ AddEventHandler('jp-pawnshop:openMenu', function()
     local items = {}
 
     for itemName, data in pairs(Config.SellableItems) do
-        print("Checking item:", itemName)  -- DEBUG
+        if Config.Debug then print("[DEBUG] Checking item:", itemName) end
         local itemCount = Player.Functions.GetItemByName(itemName)
         if itemCount then
             if Config.Debug then print("[DEBUG] Item exists:", itemName, "Amount:", itemCount.amount) end
