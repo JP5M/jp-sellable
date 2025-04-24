@@ -1,25 +1,18 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-RegisterServerEvent('jp-pawnshop:openMenu')
-AddEventHandler('jp-pawnshop:openMenu', function()
+RegisterServerEvent('jp-sellable:openMenu')
+AddEventHandler('jp-sellable:openMenu', function(shopId)
     local src = source
-    if Config.Debug then print("[DEBUG] Pawnshop menu requested by:", src) end
-
     local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then
-        print("Error: Player not found!")
-        return
-    end
+    if not Player then return end
+
+    local shop = Config.Shops[shopId]
+    if not shop then return end
 
     local items = {}
 
-    for itemName, data in pairs(Config.SellableItems) do
-        if Config.Debug then print("[DEBUG] Checking item:", itemName) end
+    for itemName, data in pairs(shop.sellableItems) do
         local itemCount = Player.Functions.GetItemByName(itemName)
-        if itemCount then
-            if Config.Debug then print("[DEBUG] Item exists:", itemName, "Amount:", itemCount.amount) end
-        end
-
         if itemCount and itemCount.amount > 0 then
             table.insert(items, {
                 name = itemName,
@@ -37,22 +30,24 @@ AddEventHandler('jp-pawnshop:openMenu', function()
         return
     end
 
-    TriggerClientEvent('jp-pawnshop:showMenu', src, items)
+    TriggerClientEvent('jp-sellable:showMenu', src, items, shopId)
 end)
 
-RegisterServerEvent('jp-pawnshop:sellItem')
-AddEventHandler('jp-pawnshop:sellItem', function(item)
+RegisterServerEvent('jp-sellable:sellItem')
+AddEventHandler('jp-sellable:sellItem', function(item, shopId)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    local itemData = Config.SellableItems[item]
+    local shop = Config.Shops[shopId]
+    if not shop then return end
 
+    local itemData = shop.sellableItems[item]
     if itemData then
-        local itemCount = Player.Functions.GetItemByName(item)?.amount or 0
-        if itemCount > 0 then
-            local price = itemData.price * itemCount
-            Player.Functions.RemoveItem(item, itemCount)
+        local count = Player.Functions.GetItemByName(item)?.amount or 0
+        if count > 0 then
+            local price = itemData.price * count
+            Player.Functions.RemoveItem(item, count)
             Player.Functions.AddMoney('cash', price)
-            TriggerClientEvent('QBCore:Notify', src, "You sold " .. itemCount .. "x " .. item .. " for $" .. price, "success")
+            TriggerClientEvent('QBCore:Notify', src, "You sold " .. count .. "x " .. item .. " for $" .. price, "success")
         else
             TriggerClientEvent('QBCore:Notify', src, "You don't have this item!", "error")
         end
@@ -61,24 +56,27 @@ AddEventHandler('jp-pawnshop:sellItem', function(item)
     end
 end)
 
-RegisterServerEvent('jp-pawnshop:sellAll')
-AddEventHandler('jp-pawnshop:sellAll', function()
+RegisterServerEvent('jp-sellable:sellAll')
+AddEventHandler('jp-sellable:sellAll', function(shopId)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    local totalEarnings = 0
+    local shop = Config.Shops[shopId]
+    if not shop then return end
 
-    for item, data in pairs(Config.SellableItems) do
-        local itemCount = Player.Functions.GetItemByName(item)?.amount or 0
-        if itemCount > 0 then
-            local price = data.price * itemCount
-            Player.Functions.RemoveItem(item, itemCount)
+    local total = 0
+
+    for item, data in pairs(shop.sellableItems) do
+        local count = Player.Functions.GetItemByName(item)?.amount or 0
+        if count > 0 then
+            local price = data.price * count
+            Player.Functions.RemoveItem(item, count)
             Player.Functions.AddMoney('cash', price)
-            totalEarnings = totalEarnings + price
+            total = total + price
         end
     end
 
-    if totalEarnings > 0 then
-        TriggerClientEvent('QBCore:Notify', src, "You sold all sellable items for $" .. totalEarnings, "success")
+    if total > 0 then
+        TriggerClientEvent('QBCore:Notify', src, "You sold all items for $" .. total, "success")
     else
         TriggerClientEvent('QBCore:Notify', src, "No items to sell!", "error")
     end
