@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'JP Scripts'
 description 'Pawnshop Script for QBCore'
-version '1.0.0'
+version '1.1.0'
 
 shared_scripts {
     '@ox_lib/init.lua',
