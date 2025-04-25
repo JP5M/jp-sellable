@@ -44,7 +44,11 @@ AddEventHandler('jp-sellable:sellItem', function(item, shopId)
     if itemData then
         local count = Player.Functions.GetItemByName(item)?.amount or 0
         if count > 0 then
-            local price = itemData.price * count
+            local unitPrice = itemData.price
+            if itemData.maxprice then
+                unitPrice = math.min(unitPrice, itemData.maxprice)
+            end
+            local price = unitPrice * count
             Player.Functions.RemoveItem(item, count)
             Player.Functions.AddMoney('cash', price)
             TriggerClientEvent('QBCore:Notify', src, "You sold " .. count .. "x " .. item .. " for $" .. price, "success")
@@ -68,7 +72,11 @@ AddEventHandler('jp-sellable:sellAll', function(shopId)
     for item, data in pairs(shop.sellableItems) do
         local count = Player.Functions.GetItemByName(item)?.amount or 0
         if count > 0 then
-            local price = data.price * count
+            local unitPrice = data.price
+            if data.maxprice then
+                unitPrice = math.min(unitPrice, data.maxprice)
+            end
+            local price = unitPrice * count
             Player.Functions.RemoveItem(item, count)
             Player.Functions.AddMoney('cash', price)
             total = total + price
